@@ -1,0 +1,195 @@
+#!/bin/bash
+#declare -a dungeon1=(	█ 0 0 0 0 0 █ █ 
+#			█ █ █ 0 0 T 0 █ 
+#			█ 0 0 0 0 0 0 █ 
+#			█ █ 0 T 0 0 █ █ 
+#			█ █ █ 0 0 █ █ █ )
+
+declare -a dungeon1=(   █ "/" "-" "-" "-" "-" █ █
+                        █ █ █ "-" "T" "-" "-" █
+                        █ "-" "-" "-" "-" "-" "-" █
+                        █ █ "-" "T" "-" "-" █ █
+                        █ █ █ "-" "-" █ █ █ )
+
+declare -a dungeon2=(   █ "/" "-" "T" "-" "T" █ █
+                        █ █ █ "-" "-" "-" "-" █
+                        █ "-" "-" "-" "-" "-" "-" █
+                        █ █ "-" "-" "-" "-" █ █
+                        █ █ █ "-" "-" █ █ █ )
+
+declare -a dungeon3=(   █ "/" "-" "-" "-" "-" █ █
+                        █ █ █ "-" "-" "-" "-" █
+                        █ "-" "-" "-" "-" "T" "-" █
+                        █ █ "-" "-" "-" "T" █ █
+                        █ █ █ "-" "-" █ █ █ )
+
+declare -a dungeon4=(   █ "/" "-" "-" "-" "-" █ █
+                        █ █ █ "-" "-" "-" "-" █
+                        █ "-" "-" "-" "-" "T" "-" █
+                        █ █ "-" "-" "-" "" █ █
+                        █ █ █ "-" "T" █ █ █ )
+
+declare -a dungeon5=(   █ "/" "-" "-" "T" "-" █ █
+                        █ █ █ "-" "-" "-" "-" █
+                        █ "-" "-" "-" "-" "-" "-" █
+                        █ █ "-" "-" "-" "-" █ █
+                        █ █ █ "T" "-" █ █ █ )
+dungeon1start=18
+dungeon1stop=2
+dunj(){
+dungeonState=1
+local dungeon=("$@")
+print_dunj(){
+	dungeon[$playerPos]="X"
+
+k=0
+for j in {1..5}
+do
+	for i in {1..8}
+	do
+		echo -n "${dungeon[k]}  "
+		k=$((k+1))
+	done
+	echo ""
+done
+echo "LEGEND"
+echo "X = Player"
+echo "T = Treasure"
+echo "/ = Stairs to next floor"
+}
+playerPos=$dungeon1start
+right=0
+left=0
+up=0
+down=0
+declare -a movearr=()
+checkPos(){
+movearr=()
+if [[ "${dungeon[$playerPos+1]}" = "-" || "${dungeon[$playerPos+1]}" = "T" || "${dungeon[$playerPos+1]}" = "/" ]]; then
+	echo "Right?"
+	right=1
+	movearr+="Right "
+fi
+if [[ "${dungeon[$playerPos-1]}" = "-" || "${dungeon[$playerPos-1]}" = "T" || "${dungeon[$playerPos-1]}" = "/" ]]; then
+	left=1
+	movearr+="Left "
+fi
+if [[ "${dungeon[$playerPos-8]}" = "-" || "${dungeon[$playerPos-8]}" = "T" || "${dungeon[$playerPos-8]}" = "/" && "$((playerPos-7))" -gt 0 ]]; then
+	up=1
+	movearr+="Up "
+fi
+if [[ "${dungeon[$playerPos+8]}" = "-" || "${dungeon[$playerPos+8]}" = "T" || "${dungeon[$playerPos+8]}" = "/" ]]; then
+	down=1
+	movearr+="Down "
+fi
+}
+checkPos
+dungeon[$playerPos]="X"
+print_dunj
+
+PS3="Pick a direction: "
+while [[ $dungeonState = 1 ]]
+do
+	if [[ $playerPos == 1 ]]; then
+		if [[ $dungLevel == 4 ]]; then
+			battle "${gigas[@]}"
+                	echo "You fell the impermeable Iron Golem obstructing the next floor and return to town!"
+			echo ""
+                	dungLevel=$((dungLevel+1))
+		elif [[ $dungLevel < 5 ]]; then
+			echo "You unlock the next level and turn back to town!"
+			dungLevel=$((dungLevel+1))
+		fi
+		break
+	fi
+select move in ${movearr[@]}
+do
+	local rand=$((RANDOM % 3 + 1))
+	local entype=$((RANDOM % 2 + 1))
+	echo "chance is $rand, enemy is $entype"
+	if [[ $rand = 3 ]]; then
+		echo "You encounter an Enemy!"
+		sleep 1
+		case $dungLevel in
+			1)
+				case $entype in
+					1)
+						battle "${goblin[@]}";;
+					2)
+						battle "${oni[@]}";;
+				esac;;
+			2)
+				case $entype in
+                                        1)
+                                                battle "${imp[@]}";;
+                                        2)
+                                                battle "${oni[@]}";;
+                                esac;;
+			3)
+				case $entype in
+                                        1)
+                                                battle "${imp[@]}";;
+                                        2)
+                                                battle "${orias[@]}";;
+                                esac;;
+			4)
+				case $entype in
+                                        1)
+                                                battle "${hobgoblin[@]}";;
+                                        2)
+                                                battle "${balam[@]}";;
+                                esac;;
+			5)
+				case $entype in
+                                        1)
+                                                battle "${hobgoblin[@]}";;
+                                        2)
+                                                battle "${belial[@]}";;
+                                esac;;
+		esac
+	fi
+	case $move in
+		Right)
+			playerPos=$((playerPos+1))
+			if [[  "${dungeon[$playerPos]}" = "T" ]]; then
+   				sleep 1
+        			treasureDrop
+			fi
+			dungeon[$playerPos-1]="-"
+			checkPos
+			print_dunj
+			break;;
+		Left)
+			playerPos=$((playerPos-1))
+			if [[  "${dungeon[$playerPos]}" = "T" ]]; then
+                                sleep 1
+                                treasureDrop
+                        fi
+                        dungeon[$playerPos+1]="-"
+                        checkPos
+                        print_dunj
+			break;;
+		Up)
+			playerPos=$((playerPos-8))
+			if [[  "${dungeon[$playerPos]}" = "T" ]]; then
+                                sleep 1
+                                treasureDrop
+                        fi
+                        dungeon[$playerPos+8]="-"
+                        checkPos
+                        print_dunj
+			break;;
+		Down)
+			playerPos=$((playerPos+8))
+			if [[  "${dungeon[$playerPos]}" = "T" ]]; then
+                                sleep 1
+                                treasureDrop
+                        fi
+                        dungeon[$playerPos-8]="-"
+                        checkPos
+                        print_dunj
+			break;;
+	esac
+done
+done
+}

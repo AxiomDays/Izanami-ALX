@@ -1,0 +1,204 @@
+status_stats (){
+        for stat in "${!stats[@]}"
+do
+        echo "$stat : ${stats[$stat]} + ${eqstats[$stat]}"
+done
+}
+
+status_equip (){
+for eq in "${!equip[@]}"
+do
+        echo "$eq : ${equip[$eq]}"
+done
+}
+
+save(){
+if [[ ! -f "save.conf" ]]; then
+       echo "no save data detected. new data created."
+fi
+echo "
+name=(${name[@]})
+age=${age}
+class=${class}
+activeElement=${activeElement}
+dungLevel=${dungLevel}
+diedYet=${diedYet}
+declare -a kobanekoActiveList=(${kobanekoActiveList[@]@Q})
+crowleyActiveList=(${crowleyActiveList[@]@Q})
+talkarr=(${talkarr[@]@Q})
+declare -A dialogueChecks=(
+["dungLevelCrowleycheck"]=${dialogueChecks[dungLevelCrowleycheck]}
+["dungLevelKobancheck"]=${dialogueChecks[dungLevelKobancheck]}
+["kobamaoucheck"]=${dialogueChecks[kobamaoucheck]}
+["kobanBreak"]=${dialogueChecks[kobanBreak]}
+["kobasubjcheck"]=${dialogueChecks[kobasubjcheck]}
+["kobaguidecheck"]=${dialogueChecks[kobaguidecheck]}
+["endCrowCheck"]=${dialogueChecks[endCrowCheck]}
+["endKobanCheck"]=${dialogueChecks[endKobanCheck]}
+["endWhiteCheck"]=${dialogueChecks[endWhiteCheck]}
+)
+
+equipmentNo=(${equipmentNo[@]})
+
+declare -A stats=(
+["STR"]=${stats[STR]}
+["INT"]=${stats[INT]}
+["WIS"]=${stats[WIS]}
+["END"]=${stats[END]}
+["GUI"]=${stats[GUI]}
+["AGI"]=${stats[AGI]}
+)
+agech1=${agech1}
+
+declare -A derived=(
+["MaxHP"]=${derived[MaxHP]}
+["HP"]=${derived[HP]}
+["MaxSTA"]=${derived[MaxSTA]}
+["STA"]=${derived[STA]}
+)
+
+declare -A flags=(
+["menuState"]=0
+["battleState"]=0
+["loadflag"]=${flags[loadflag]}
+["saveflag"]=${flags[saveflag]}
+)
+
+declare -A resources=(
+["LVL"]=${resources[LVL]}
+["EXP"]=${resources[EXP]}
+["NEXP"]=${resources[NEXP]}
+["GOLD"]=${resources[GOLD]}
+["MAG"]=${resources[MAG]}
+)
+
+declare -A statusfx=(
+["exhaust"]=0
+["sealed"]=0
+["toxin"]=0
+)
+
+declare -A eqstats=(
+["STR"]=${eqstats[STR]}
+["INT"]=${eqstats[INT]}
+["END"]=${eqstats[END]}
+["AGI"]=${eqstats[AGI]}
+["WIS"]=${eqstats[WIS]}
+)
+
+declare -A equip=(
+["HEAD"]=${equip[HEAD]}
+["BODY"]=${equip[BODY]}
+["WEAPON"]=${equip[WEAPON]}
+)
+
+declare -A inventory=(
+["Medicine"]=${inventory[Medicine]}
+["Tonic"]=${inventory[Tonic]}
+["StaminaPill"]=${inventory[StaminaPill]}
+["SenchaTea"]=${inventory[SenchaTea]}
+["FiveFingerSeal"]=${inventory[FiveFingerSeal]}
+["Antidote"]=${inventory[Antidote]}
+["EnergyCandy"]=${inventory[EnergyCandy]}
+["Panacea"]=${inventory[Panacea]}
+["GreenHerbs"]=${inventory[GreenHerbs]}
+["RedHerbs"]=${inventory[RedHerbs]}
+["BlueHerbs"]=${inventory[BlueHerbs]}
+["KobanCoin"]=${inventory[KobanCoin]}
+)
+
+
+" > save.conf
+echo "Saving..."
+sleep 1
+}
+
+whom(){
+        echo "Your name is ${name[@]}. You are a ${age}-year old ${class} with ${derived[HP]} HP and ${derived[STA]} Stamina. Your Mag is ${resources[MAG]} "
+}
+
+equip_check () {
+	eqstats[STR]=0
+	eqstats[INT]=0
+	eqstats[END]=0
+	eqstats[AGI]=0
+        eqstats[WIS]=0	
+	case ${equip[HEAD]} in
+		Turban)
+			eqstats[END]=$((eqstats[END]+2))
+			eqstats[WIS]=$((eqstats[WIS]+2))
+			;;
+		WoolCap)
+			eqstats[END]=$((eqstats[END]+3))
+                        eqstats[AGI]=$((eqstats[AGI]+2))
+                        ;;
+		Helmet)
+			eqstats[END]=$((eqstats[END]+3))
+                        eqstats[STR]=$((eqstats[STR]+4))
+                        ;;
+		WitchHat)
+			eqstats[INT]=$((eqstats[END]+4))
+                        eqstats[WIS]=$((eqstats[WIS]+2))
+                        ;;
+		DemonHorn)
+                        eqstats[END]=$((eqstats[END]+5))
+                        eqstats[STR]=$((eqstats[STR]+8))
+                        ;;
+	esac
+
+	case ${equip[BODY]} in
+		Shirt)
+                        eqstats[END]=$((eqstats[END]+5))
+                        ;;
+		Lthr.Armor)
+                        eqstats[END]=$((eqstats[END]+7))
+			eqstats[AGI]=$((eqstats[AGI]-3))
+                        ;;
+		TurtleShell)
+                        eqstats[END]=$((eqstats[END]+10));;
+		 NinjaArmor)
+                        eqstats[END]=$((eqstats[END]+6))
+                        eqstats[AGI]=$((eqstats[AGI]+4));;
+		DevourerChitin)
+                        eqstats[END]=$((eqstats[END]+10))
+                        eqstats[AGI]=$((eqstats[STR]+5))
+                        ;;
+	esac
+
+	case ${equip[WEAPON]} in
+		ShortSword)
+			eqstats[STR]=$((eqstats[STR]+3));;
+		BloodiedDagger)
+                        eqstats[STR]=$((eqstats[STR]+3))
+			eqstats[AGI]=$((eqstats[AGI]+3))
+			activeElement="Blood";;
+		SpinningChakram)
+		if [[ ${class} = "Shinobi" ]]; then
+                        eqstats[STR]=$((eqstats[STR]+3))
+                        eqstats[AGI]=$((eqstats[AGI]+3))
+                        activeElement="Wind"
+		else
+			echo "Can only be equipped by shinobi."
+		fi;;
+		BloodSword)
+                        eqstats[STR]=$((eqstats[STR]+5))
+			activeElement="Blood";;
+		GigantEdge)
+                        eqstats[STR]=$((eqstats[STR]+7))
+			activeElement="Earth";;
+		NinjaSword)
+                        eqstats[STR]=$((eqstats[STR]+5))
+			eqstats[AGI]=$((eqstats[AGI]+4))
+			activeElement="Wind";;
+		IceBrand)
+                        eqstats[STR]=$((eqstats[STR]+7))
+                        activeElement="Water";;
+		Excalihuh?)
+			eqstats[END]=$((eqstats[END]+5))
+                        eqstats[STR]=$((eqstats[STR]+5))
+                        eqstats[AGI]=$((eqstats[AGI]+5))
+			activeElement="Wind";;
+	esac
+}
+
+
